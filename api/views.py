@@ -88,12 +88,13 @@ def quickAddExpense(request):
     parsed = ai.parse_expense_text(text)
     if parsed is None:
         return Response({'error': 'Quick-add unavailable — check ANTHROPIC_API_KEY, or enter the expense manually'}, status=503)
-    expense = Expense.objects.create(
-        amount=parsed.amount,
-        description=parsed.description,
-        category=parsed.category,
-        date=parsed.date,
-    )
+    serializer = ExpenseSerializer(data={
+        'amount': parsed.amount, 'description': parsed.description,
+        'category': parsed.category, 'date': parsed.date,
+    })
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=422)
+    expense = serializer.save()
     return Response(ExpenseSerializer(expense).data, status=201)
 
 
